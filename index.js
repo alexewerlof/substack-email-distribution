@@ -1,0 +1,70 @@
+#!/usr/bin/env node
+import { parseArgs } from 'util';
+import fs from 'fs';
+import readline from 'readline';
+
+export async function parseEmails(csvFilename) {
+  await fs.promises.access(csvFilename);
+  const fileStream = fs.createReadStream(csvFilename);
+
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
+
+  const lines = rl[Symbol.asyncIterator]();
+  const headerResult = await lines.next();
+
+  if (headerResult.done) {
+    throw new Error('Error: CSV file is empty.');
+  }
+
+  const headers = headerResult.value.split(',');
+  // Find the column named 'Email' (case-sensitive matching Substack's default)
+  const emailIndex = headers.findIndex((h) => h.trim() === 'Email');
+
+  if (emailIndex === -1) {
+    throw new Error('Error: "Email" column not found in CSV headers.');
+  }
+
+  const ret = []
+
+  for await (const line of lines) {
+    // Simple split by comma. Note: This does not handle commas inside quoted fields.
+    const columns = line.split(',');
+
+    if (columns[emailIndex]) {
+      ret.push(columns[emailIndex].trim());
+    }
+  }
+
+  return ret;
+}
+
+export function getDomain(email) {
+  return email.split('@')[1].toLowerCase();
+}
+
+async function main() {
+  const { positionals } = parseArgs({
+    allowPositionals: true,
+  });
+
+  const emails = await parseEmails(positionals[0]);
+
+  const domainCounter = Object.create(null)
+  
+  for (const email of emails) {
+    const domain = getDomain(email);
+    if (!(domain in domainCounter)) {
+        domainCounter[domain] = 0;
+    }
+    domainCounter[domain]++;
+  }
+
+  const domainCounts = Object.entries(domainCounter).sort((a, b) => b[1] - a[1])
+  console.table(Object.fromEntries(domainCounts.map(([domain, count]) => [domain, { Count: count }])));
+  console.log(`Total: ${emails.length}`);
+}
+
+main().catch(console.error);
