@@ -52,26 +52,45 @@ function sortByCountAndDomain([domainA, countA], [domainB, countB]) {
   return countB - countA
 }
 
+function getDomainCounts(emails) {
+  const ret = Object.create(null)
+  
+  for (const email of emails) {
+    const domain = getDomain(email);
+    if (!(domain in ret)) {
+        ret[domain] = 0;
+    }
+    ret[domain]++;
+  }
+
+  return ret;
+}
+
+function sortDomainCounts(domainCounts) {
+  return Object.entries(domainCounts).sort(sortByCountAndDomain);
+}
+
 async function main() {
-  const { positionals } = parseArgs({
+  const { values, positionals } = parseArgs({
+    options: {
+      format: {
+        type: 'string',
+        short: 'f',
+        default: 'table',
+      },
+    },
     allowPositionals: true,
   });
 
   const emails = await parseEmails(positionals[0]);
+  const sortedDomainCounts = sortDomainCounts(getDomainCounts(emails));
 
-  const domainCounter = Object.create(null)
-  
-  for (const email of emails) {
-    const domain = getDomain(email);
-    if (!(domain in domainCounter)) {
-        domainCounter[domain] = 0;
-    }
-    domainCounter[domain]++;
+  if (values.format === 'json') {
+    console.log(JSON.stringify(Object.fromEntries(sortedDomainCounts), null, 2));
+  } else {
+    console.table(Object.fromEntries(sortedDomainCounts.map(([domain, count]) => [domain, { Count: count }])));
+    console.log(`Total: ${emails.length}`);
   }
-
-  const sortedDomainCounter = Object.entries(domainCounter).sort(sortByCountAndDomain);
-  console.table(Object.fromEntries(sortedDomainCounter.map(([domain, count]) => [domain, { Count: count }])));
-  console.log(`Total: ${emails.length}`);
 }
 
 main().catch(console.error);
