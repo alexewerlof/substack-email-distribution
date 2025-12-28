@@ -45,6 +45,13 @@ export function getDomain(email) {
   return email.split('@')[1].toLowerCase();
 }
 
+function sortByCountAndDomain([domainA, countA], [domainB, countB]) {
+  if (countA === countB) {
+    return domainA.localeCompare(domainB);
+  }
+  return countB - countA
+}
+
 async function main() {
   const { positionals } = parseArgs({
     allowPositionals: true,
@@ -62,8 +69,8 @@ async function main() {
     domainCounter[domain]++;
   }
 
-  const domainCounts = Object.entries(domainCounter).sort((a, b) => b[1] - a[1])
-  console.table(Object.fromEntries(domainCounts.map(([domain, count]) => [domain, { Count: count }])));
+  const sortedDomainCounter = Object.entries(domainCounter).sort(sortByCountAndDomain);
+  console.table(Object.fromEntries(sortedDomainCounter.map(([domain, count]) => [domain, { Count: count }])));
   console.log(`Total: ${emails.length}`);
 }
 
