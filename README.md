@@ -30,13 +30,13 @@ Go to Substack Dasbhboard and export all subscribers then move the CSV to the sa
 Directly from NPM:
 
 ```bash
-npx substack-email-distribution CSV_FILE_NAME
+npx substack-email-distribution path/to/file.csv
 ```
 
 If you have cloned the repo:
 
 ```bash
-node index.js CSV_FILE_NAME
+node index.js path/to/file.csv
 ```
 
 This prints out a sorted email domain list by number of emails from that domain like this:
