@@ -27,11 +27,20 @@ This is a small script that goes through the list of your Substack email subscri
 
 Go to Substack Dasbhboard and export all subscribers then move the CSV to the same folder as this script.
 
-Directly from NPM:
+Directly from NPM using the [`npx`](https://docs.npmjs.com/cli/v8/commands/npx) command:
 
 ```bash
 npx substack-email-distribution path/to/file.csv
 ```
+
+You can also specify a format with `-f` which can be:
+
+- `json`: json object where key is the email domain and value is the frequency of that domain
+- `csv`: comma separated values
+- `tsv`: tab separated values
+- `table`: (default)
+
+The full list of options can be seen using `-h` option.
 
 If you have cloned the repo:
 
@@ -57,7 +66,6 @@ This prints out a sorted email domain list by number of emails from that domain 
 ...
 │ alexewerlof.com                   │ 1     │
 └───────────────────────────────────┴───────┘
-Total: 17085
 ```
 
 The file can be long so you may want to forward the output to a file:

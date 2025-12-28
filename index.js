@@ -3,6 +3,8 @@ import { parseArgs } from 'util'
 import fs from 'fs'
 import readline from 'readline'
 
+const DEFAULT_FORMAT = 'table'
+
 export async function parseEmails(csvFilename) {
     await fs.promises.access(csvFilename)
     const fileStream = fs.createReadStream(csvFilename)
@@ -70,27 +72,60 @@ function sortDomainCounts(domainCounts) {
     return Object.entries(domainCounts).sort(sortByCountAndDomain)
 }
 
+function print(domainCounts, format = DEFAULT_FORMAT) {
+    switch (format.toLowerCase()) {
+        case 'json':
+            console.log(JSON.stringify(Object.fromEntries(domainCounts), null, 2))
+            break
+        case 'csv':
+            console.log('Domain,Count')
+            domainCounts.forEach(([domain, count]) => console.log(`${domain},${count}`))
+            break
+        case 'tsv':
+            console.log('Domain\tCount')
+            domainCounts.forEach(([domain, count]) => console.log(`${domain}\t${count}`))
+            break
+        case 'table':
+            console.table(Object.fromEntries(domainCounts.map(([domain, count]) => [domain, { Count: count }])))
+            break
+        default:
+            throw new Error(`Unknown format: ${format}`)
+    }
+}
+
 async function main() {
     const { values, positionals } = parseArgs({
         options: {
             format: {
                 type: 'string',
                 short: 'f',
-                default: 'table',
+                default: DEFAULT_FORMAT,
+            },
+            help: {
+                type: 'boolean',
+                short: 'h',
             },
         },
         allowPositionals: true,
     })
 
+    if (values.help) {
+        console.log(
+            [
+                'Usage: substack-email-distribution [options] <file>',
+                '',
+                'Options:',
+                '  -f, --format <type>  Output format (table, json, csv, tsv) [default: table]',
+                '  -h, --help           Show this help message',
+            ].join('\n'),
+        )
+        process.exit(0)
+    }
+
     const emails = await parseEmails(positionals[0])
     const sortedDomainCounts = sortDomainCounts(getDomainCounts(emails))
 
-    if (values.format === 'json') {
-        console.log(JSON.stringify(Object.fromEntries(sortedDomainCounts), null, 2))
-    } else {
-        console.table(Object.fromEntries(sortedDomainCounts.map(([domain, count]) => [domain, { Count: count }])))
-        console.log(`Total: ${emails.length}`)
-    }
+    print(sortedDomainCounts, values.format)
 }
 
 main().catch(console.error)
