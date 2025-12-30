@@ -23,9 +23,9 @@ S:::::::::::::::SS E::::::::::::::::::::ED::::::::::::DDD
 
 This is a small script that goes through the list of your Substack email subscribers and creates a distribution table for the domain names.
 
-☑️ No dependency. Uses Node's native CVS parser
-☑️ Easy to audit: just one file
-☑️ Works directly from the command line. No need to clone the repo.
+- ☑️ No dependency. Uses Node's native CVS parser
+- ☑️ Easy to audit: just one file
+- ☑️ Works directly from the command line. No need to clone the repo.
 
 ## Why does this exist?
 
